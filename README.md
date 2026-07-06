@@ -5,19 +5,19 @@ This a very simple implementation of Go-like flags in Odin
 ## How to use
 
 ```odin
-	import "myflag"
+	import "fleg"
 
 	isRunning: bool
 	isNumber: int
 	isString: string
 	isFloat: f32
 
-	myflag.BoolVar(&isRunning, "isRunning", true, "A select piece of code is running!")
-	myflag.IntVar(&isNumber, "isNumber", 3434, "A number!")
-	myflag.StringVar(&isString, "isString", "Hellope!", "A string!")
-	myflag.Float32Var(&isFloat, "isFloat", 3.1415, "A float!")
+	fleg.BoolVar(&isRunning, "isRunning", true, "A select piece of code is running!")
+	fleg.IntVar(&isNumber, "isNumber", 3434, "A number!")
+	fleg.StringVar(&isString, "isString", "Hellope!", "A string!")
+	fleg.Float32Var(&isFloat, "isFloat", 3.1415, "A float!")
 
-	myflag.parse_flags()
+	fleg.parse_flags()
 ```
 
 ***Supports: bool, int, string, f32***
@@ -63,6 +63,6 @@ If needed, you are able to setup a custom allocator like so:
 	arena_alloc := vmem.arena_allocator(&arena)
 	defer vmem.arena_destroy(&arena)
 
-	myflag.init_custom_allocator(arena_alloc)
-	defer myflag.destroy() //clean up flags
+	fleg.init_custom_allocator(arena_alloc)
+	defer fleg.destroy() //clean up flags
 ```

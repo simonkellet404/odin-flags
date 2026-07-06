@@ -1,8 +1,7 @@
-package flag
+package main
 
 import "core:fmt"
-import vmem "core:mem/virtual"
-import "myflag"
+import "fleg"
 
 main :: proc(){
 	/*
@@ -12,20 +11,20 @@ main :: proc(){
 	arena_alloc := vmem.arena_allocator(&arena)
 	defer vmem.arena_destroy(&arena) //clean
 
-	myflag.init_custom_allocator(arena_alloc)
+	fleg.init_custom_allocator(arena_alloc)
 	*/
 
-	defer myflag.destroy()
+	defer fleg.destroy()
 	isRunning: bool
 	isNumber: int
 	isString: string
 	isFloat: f32
 
-	myflag.BoolVar(&isRunning, "isRunning", true, "A select piece of code is running!")
-	myflag.IntVar(&isNumber, "isNumber", 3434, "A number!")
-	myflag.StringVar(&isString, "isString", "Hellope!", "A string!")
-	myflag.Float32Var(&isFloat, "isFloat", 3.1415, "A float!")
-	myflag.parse_flags()
+	fleg.BoolVar(&isRunning, "isRunning", true, "A select piece of code is running!")
+	fleg.IntVar(&isNumber, "isNumber", 3434, "A number!")
+	fleg.StringVar(&isString, "isString", "Hellope!", "A string!")
+	fleg.Float32Var(&isFloat, "isFloat", 3.1415, "A float!")
+	fleg.parse_flags()
 
 	fmt.println("-------MAIN--------")
 	fmt.println(isRunning)
