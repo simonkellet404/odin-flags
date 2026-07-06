@@ -32,7 +32,7 @@ And on the command line, you pass flags like so:
 
 The package also contains a help context menu. This comes default and can be called like so
 
-```bash
+```txt
 ./<program name> -help
 
 	Usage:
