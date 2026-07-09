@@ -45,7 +45,8 @@ Flag :: struct {
 	name:   string,
 	value:  Flag_Value_Ptr,
 	usage:  string,
-	parsed: bool, // sck: flag to check if it has been parsed
+	parsed: bool,   // sck: flag to check if it has been parsed
+	required: bool, // sck: required flag
 }
 
 // Global dynamic array of Flags
@@ -69,14 +70,19 @@ destroy :: proc() {
 
 print_flags :: proc() {
 	for f in all_flags {
-		fmt.printfln("%s: %v: %s", f.name, f.value, f.usage)
+		fmt.printfln("%s: %s (required=%v)", f.name, f.usage, f.required)
 	}
+}
+
+print_flag_format :: proc(){
+	fmt.printfln("Want %s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
 }
 
 print_usage :: proc() {
 	fmt.println("\tUsage: ")
 	fmt.println("\n\tFlag format for this program:")
 	fmt.printfln("\t%s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
+
 	for f in all_flags {
 		switch v in f.value {
 		case ^bool:
@@ -91,37 +97,36 @@ print_usage :: proc() {
 			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)\n", FLAG_START_CHAR, f.name, f.usage, v^)
 		}
 	}
-	os.exit(0)
 }
 
-BoolVar :: proc(ptr: ^bool, name: string, default: bool, usage: string) {
+BoolVar :: proc(ptr: ^bool, name: string, default: bool, usage: string, required := false) {
 	ptr^ = default
-	append(&all_flags, Flag{name = name, value = ptr, usage = usage})
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
-IntVar :: proc(ptr: ^int, name: string, default: int, usage: string) {
+IntVar :: proc(ptr: ^int, name: string, default: int, usage: string, required := false) {
 	ptr^ = default
-	append(&all_flags, Flag{name = name, value = ptr, usage = usage})
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
-StringVar :: proc(ptr: ^string, name: string, default: string, usage: string) {
+StringVar :: proc(ptr: ^string, name: string, default: string, usage: string, required := false) {
 	ptr^ = default
-	append(&all_flags, Flag{name = name, value = ptr, usage = usage})
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
-Float32Var :: proc(ptr: ^f32, name: string, default: f32, usage: string) {
+Float32Var :: proc(ptr: ^f32, name: string, default: f32, usage: string, required := false) {
 	ptr^ = default
-	append(&all_flags, Flag{name = name, value = ptr, usage = usage})
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
-Float64Var :: proc(ptr: ^f64, name: string, default: f64, usage: string) {
+Float64Var :: proc(ptr: ^f64, name: string, default: f64, usage: string, required := false) {
 	ptr^ = default
-	append(&all_flags, Flag{name = name, value = ptr, usage = usage})
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
 parse_flags :: proc() {
+	defer destroy()
 	// sck: We cannot have the start and seperator formats being the same
-	// ...leads to parsing errors...
 	if FLAG_START_CHAR == FLAG_SEP_CHAR {
 		fmt.println("[ERROR]: FLAG_START_CHAR and FLAG_SEP_CHAR cannot be the same!")
 		fmt.printfln("\t FLAG_START_CHAR= \"%s\"\t FLAG_SEP_CHAR= \"%s\"", FLAG_START_CHAR, FLAG_SEP_CHAR)
@@ -129,18 +134,18 @@ parse_flags :: proc() {
 	}
 	if len(os.args) < 2 && FORCE_HELP_ON_EMPTY_ARGS {print_usage()}
 
-	for &a in os.args {
-		if a == "-h" || a == "-help" || a == "--help" {print_usage()}
+	// sck: skip the first arg
+	for &a in os.args[1:] {
+		if a == "-h" || a == "-help" || a == "--help" {print_usage(); os.exit(0)}
 		// sck: if the user has a custom flag format, copy that to the help flag too.
-		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "help", allocator = flag_allocator) {print_usage()}
-		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "h", allocator = flag_allocator) {print_usage()}
+		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "help", allocator = flag_allocator) {print_usage(); os.exit(0)}
+		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "h", allocator = flag_allocator) {print_usage(); os.exit(0)}
 
-		if a == os.args[0] {continue}
-
+		// Begin parsing flags...
 		for &f in all_flags {
 			if f.parsed {continue}
-			a = strings.trim_prefix(a, FLAG_START_CHAR)
 
+			a = strings.trim_prefix(a, FLAG_START_CHAR)
 			name := a
 			value: string
 
@@ -151,10 +156,11 @@ parse_flags :: proc() {
 			} else {
 				name = a
 				fmt.printf("[INFO]: Could not read flag: %s. ", name)
-				fmt.printfln("Want %s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
+				print_flag_format()
 				break
 			}
 
+			// sck: We are going to parse all the flags
 			if name == f.name && !f.parsed {
 				f.parsed = true
 				switch &v in f.value {
@@ -206,4 +212,12 @@ parse_flags :: proc() {
 			}
 		}
 	}
+
+	for f in all_flags {
+	   if f.required && !f.parsed {
+	   	fmt.fprintfln(os.stderr, "[ERROR] Missing required flag: %s%s", FLAG_START_CHAR, f.name)
+	      print_usage()
+	      os.exit(1)
+	    }
+	 }
 }
