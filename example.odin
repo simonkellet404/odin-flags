@@ -1,10 +1,10 @@
 package main
 
 import "core:fmt"
+import vmem "core:mem/virtual"
 import "fleg"
 
 main :: proc(){
-	/*
 	arena: vmem.Arena
 	arena_err := vmem.arena_init_growing(&arena)
 	ensure(arena_err == nil)
@@ -12,11 +12,11 @@ main :: proc(){
 	defer vmem.arena_destroy(&arena) //clean
 
 	fleg.init_custom_allocator(arena_alloc)
-	*/
+	defer fleg.destroy()
 
 	fleg.FLAG_START_CHAR = ":"
 	fleg.FLAG_SEP_CHAR = "="
-	//fleg.FORCE_HELP_ON_EMPTY_ARGS = true
+	fleg.FORCE_HELP_ON_EMPTY_ARGS = true
 
 	defer fleg.destroy()
 	isRunning: bool
