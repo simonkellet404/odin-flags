@@ -19,8 +19,7 @@ This a very simple implementation of Go-like flags in Odin
 
 	fleg.parse_flags()
 ```
-
-You can also marks flags as **required"**. These will still be parsed, however will hault the application until they are passed:
+You can also marks flags as **required**. These will still be parsed, however will hault the application until they are passed:
 
 ```odin
 	import "fleg"
@@ -29,13 +28,13 @@ You can also marks flags as **required"**. These will still be parsed, however w
 	fleg.parse_flags()
 ```
 
-***Supports: bool, int, string, f32***
-
 And on the command line, you pass flags like so:
 
 ```bash
 ./<program name> -isNumber=45 -isRunning=false ......
 ```
+
+***Supports: bool, int, string, f32 and f64***
 
 ## Help flag:
 
