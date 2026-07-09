@@ -26,7 +26,10 @@ Flag :: struct {
 	parsed: bool, // sck: flag to check if it has been parsed
 }
 
+// Global dynamic array of Flags
 all_flags: [dynamic]Flag
+
+// runtime allocator for the flags
 flag_allocator: runtime.Allocator
 
 // sck: Used to create a customer allocator
@@ -95,21 +98,30 @@ Float64Var :: proc(ptr: ^f64, name: string, default: f64, usage: string) {
 }
 
 parse_flags :: proc() {
+	// sck: We cannot have the start and seperator formats being the same
+	// ...leads to parsing errors...
+	if FLAG_START_CHAR == FLAG_SEP_CHAR {
+		fmt.println("[ERROR]: FLAG_START_CHAR and FLAG_SEP_CHAR cannot be the same!")
+		fmt.printfln("\t FLAG_START_CHAR= \"%s\"\t FLAG_SEP_CHAR= \"%s\"", FLAG_START_CHAR, FLAG_SEP_CHAR)
+		os.exit(1)
+	}
 	if len(os.args) < 2 && FORCE_HELP_ON_EMPTY_ARGS {print_usage()}
 
 	for &a in os.args {
 		if a == "-h" || a == "-help" || a == "--help" {print_usage()}
+		// sck: if the user has a custom flag format, copy that to the help flag too.
+		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "help", allocator = flag_allocator) {print_usage()}
+		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "h", allocator = flag_allocator) {print_usage()}
+
 		if a == os.args[0] {continue}
 
 		for &f in all_flags {
 			if f.parsed {continue}
-			//a = strings.trim_prefix(a, "-")
 			a = strings.trim_prefix(a, FLAG_START_CHAR)
 
 			name := a
 			value: string
 
-			//split := strings.index_any(a, "=")
 			split := strings.index_any(a, FLAG_SEP_CHAR)
 			if split >= 0 {
 				name = a[:split]
