@@ -8,6 +8,8 @@ import "core:strconv"
 import "core:strings"
 
 FORCE_HELP_ON_EMPTY_ARGS := false
+FLAG_START_CHAR := "-"
+FLAG_SEP_CHAR := "="
 
 Flag_Value_Ptr :: union {
 	^bool,
@@ -48,18 +50,20 @@ print_flags :: proc() {
 
 print_usage :: proc() {
 	fmt.println("\tUsage: ")
+	fmt.println("\n\tFlag format for this program:")
+	fmt.printfln("\t%s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
 	for f in all_flags {
 		switch v in f.value {
 		case ^bool:
-			fmt.printfln("\t-%s:\n\t\t%s (default: %v)\n", f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %v)\n", FLAG_START_CHAR, f.name, f.usage, v^)
 		case ^int:
-			fmt.printfln("\t-%s:\n\t\t%s (default: %d)\n", f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %d)\n", FLAG_START_CHAR, f.name, f.usage, v^)
 		case ^string:
-			fmt.printfln("\t-%s:\n\t\t%s (default: %s)\n", f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %s)\n", FLAG_START_CHAR, f.name, f.usage, v^)
 		case ^f32:
-			fmt.printfln("\t-%s:\n\t\t%s (default: %f)\n", f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)\n", FLAG_START_CHAR, f.name, f.usage, v^)
 		case ^f64:
-			fmt.printfln("\t-%s:\n\t\t%s (default: %f)\n", f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)\n", FLAG_START_CHAR, f.name, f.usage, v^)
 		}
 	}
 	os.exit(0)
@@ -94,22 +98,27 @@ parse_flags :: proc() {
 	if len(os.args) < 2 && FORCE_HELP_ON_EMPTY_ARGS {print_usage()}
 
 	for &a in os.args {
-		if a == "-help" || a == "--help" {print_usage()}
+		if a == "-h" || a == "-help" || a == "--help" {print_usage()}
 		if a == os.args[0] {continue}
 
 		for &f in all_flags {
 			if f.parsed {continue}
-			a = strings.trim_prefix(a, "-")
+			//a = strings.trim_prefix(a, "-")
+			a = strings.trim_prefix(a, FLAG_START_CHAR)
 
 			name := a
 			value: string
 
-			split := strings.index_any(a, "=")
+			//split := strings.index_any(a, "=")
+			split := strings.index_any(a, FLAG_SEP_CHAR)
 			if split >= 0 {
 				name = a[:split]
 				value = a[split + 1:]
 			} else {
 				name = a
+				fmt.printf("[INFO]: Could not read flag: %s. ", name)
+				fmt.printfln("Want %s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
+				break
 			}
 
 			if name == f.name && !f.parsed {
@@ -119,7 +128,8 @@ parse_flags :: proc() {
 					if value == "" {break}
 					parsed, ok := strconv.parse_bool(value)
 					if !ok {
-						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted bool", f.name, value)
+						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted bool",
+							f.name, value)
 						os.exit(1)
 					}
 					v^ = parsed
@@ -128,7 +138,8 @@ parse_flags :: proc() {
 					if value == "" {break}
 					parsed, ok := strconv.parse_int(value)
 					if !ok {
-						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted int", f.name, value)
+						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted int",
+							f.name, value)
 						os.exit(1)
 					}
 					v^ = parsed
@@ -142,7 +153,8 @@ parse_flags :: proc() {
 					if value == "" {break}
 					parsed, ok := strconv.parse_f32(value)
 					if !ok {
-						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted f32", f.name, value)
+						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted f32",
+						 	f.name, value)
 						os.exit(1)
 					}
 					v^ = parsed
@@ -151,7 +163,8 @@ parse_flags :: proc() {
 					if value == "" {break}
 					parsed, ok := strconv.parse_f64(value)
 					if !ok {
-						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted f64", f.name, value)
+						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted f64",
+							f.name, value)
 						os.exit(1)
 					}
 					v^ = parsed
