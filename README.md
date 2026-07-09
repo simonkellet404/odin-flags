@@ -28,9 +28,9 @@ And on the command line, you pass flags like so:
 ./<program name> -isNumber=45 -isRunning=false ......
 ```
 
-## Usage flag: -help
+## Help flag:
 
-The package also contains a help context menu. This comes default and can be called like so
+The package also contains a help context menu. This comes default and can be called like so (**Note:** You can also use "-h" or "--help"):
 
 ```txt
 ./<program name> -help
@@ -51,6 +51,10 @@ The package also contains a help context menu. This comes default and can be cal
 ```
 
 **Note:** You can set the boolean *FORCE_HELP_ON_EMPTY_ARGS* to allow for the help context menu to be displayed when no arguments are passed
+
+## Custom Flag Format
+
+A custom flag format can be created by overwriting the strings *FLAG_START_CHAR* and *FLAG_SEP_CHAR*. These cannot be the same however!
 
 ## Custom Allocator
 
