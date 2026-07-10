@@ -92,6 +92,10 @@ If needed, you are able to setup a custom allocator like so:
 	defer fleg.destroy() //clean up flags
 ```
 
+### Mirror
+
+This repo is being developed on Gitea [here](https://git.simonkellet.xyz/simonkellet/odin-flags). The Github ([here](https://github.com/simonkellet404/odin-flags)) is a mirror.
+
 ## TODO
 
 * More type support
