@@ -84,17 +84,20 @@ print_usage :: proc() {
 	fmt.printfln("\t%s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
 
 	for f in all_flags {
+		req_msg: string
+		if f.required { req_msg = " (required)"}
 		switch v in f.value {
+
 		case ^bool:
-			fmt.printfln("\t%s%s:\n\t\t%s (default: %v)\n", FLAG_START_CHAR, f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %v)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^int:
-			fmt.printfln("\t%s%s:\n\t\t%s (default: %d)\n", FLAG_START_CHAR, f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %d)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^string:
-			fmt.printfln("\t%s%s:\n\t\t%s (default: %s)\n", FLAG_START_CHAR, f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %s)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^f32:
-			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)\n", FLAG_START_CHAR, f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^f64:
-			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)\n", FLAG_START_CHAR, f.name, f.usage, v^)
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %f)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		}
 	}
 }
@@ -216,7 +219,8 @@ parse_flags :: proc() {
 	for f in all_flags {
 	   if f.required && !f.parsed {
 	   	fmt.fprintfln(os.stderr, "[ERROR] Missing required flag: %s%s", FLAG_START_CHAR, f.name)
-	      print_usage()
+	   	fmt.fprintfln(os.stderr, "use -help or -h to view all flags")
+	      //print_usage()
 	      os.exit(1)
 	    }
 	 }
