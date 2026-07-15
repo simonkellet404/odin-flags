@@ -64,8 +64,9 @@ init_custom_allocator :: proc(allocator: runtime.Allocator) {
 }
 
 destroy :: proc() {
+	fmt.println("fleg destroy proc()")
 	delete(all_flags)
-	all_flags = {} // sck: needed?
+	all_flags = {}
 }
 
 print_flags :: proc() {
@@ -128,7 +129,6 @@ Float64Var :: proc(ptr: ^f64, name: string, default: f64, usage: string, require
 }
 
 parse_flags :: proc() {
-	defer destroy()
 	// sck: We cannot have the start and seperator formats being the same
 	if FLAG_START_CHAR == FLAG_SEP_CHAR {
 		fmt.println("[ERROR]: FLAG_START_CHAR and FLAG_SEP_CHAR cannot be the same!")
@@ -137,12 +137,13 @@ parse_flags :: proc() {
 	}
 	if len(os.args) < 2 && FORCE_HELP_ON_EMPTY_ARGS {print_usage()}
 
-	// sck: skip the first arg
+	// sck: skip the first arg (1:)
 	for &a in os.args[1:] {
 		if a == "-h" || a == "-help" || a == "--help" {print_usage(); os.exit(0)}
 		// sck: if the user has a custom flag format, copy that to the help flag too.
-		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "help", allocator = flag_allocator) {print_usage(); os.exit(0)}
-		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "h", allocator = flag_allocator) {print_usage(); os.exit(0)}
+		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "help", allocator = context.temp_allocator) {print_usage(); os.exit(0)}
+		if a == fmt.aprintf("%s%s", FLAG_START_CHAR, "h", allocator = context.temp_allocator) {print_usage(); os.exit(0)}
+		defer free_all(context.temp_allocator) //clean up!
 
 		// Begin parsing flags...
 		for &f in all_flags {
@@ -220,7 +221,6 @@ parse_flags :: proc() {
 	   if f.required && !f.parsed {
 	   	fmt.fprintfln(os.stderr, "[ERROR] Missing required flag: %s%s", FLAG_START_CHAR, f.name)
 	   	fmt.fprintfln(os.stderr, "use -help or -h to view all flags")
-	      //print_usage()
 	      os.exit(1)
 	    }
 	 }
