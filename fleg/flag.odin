@@ -64,7 +64,7 @@ init_custom_allocator :: proc(allocator: runtime.Allocator) {
 }
 
 destroy :: proc() {
-	fmt.println("fleg destroy proc()")
+	free_all(flag_allocator)
 	delete(all_flags)
 	all_flags = {}
 }
