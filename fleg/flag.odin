@@ -88,7 +88,6 @@ print_usage :: proc() {
 		req_msg: string
 		if f.required { req_msg = " (required)"}
 		switch v in f.value {
-
 		case ^bool:
 			fmt.printfln("\t%s%s:\n\t\t%s (default: %v)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^int:
@@ -220,7 +219,7 @@ parse_flags :: proc() {
 	for f in all_flags {
 	   if f.required && !f.parsed {
 	   	fmt.fprintfln(os.stderr, "[ERROR] Missing required flag: %s%s", FLAG_START_CHAR, f.name)
-	   	fmt.fprintfln(os.stderr, "use -help or -h to view all flags")
+	   	if !FORCE_HELP_ON_EMPTY_ARGS {fmt.fprintfln(os.stderr, "use -help or -h to view all flags")}
 	      os.exit(1)
 	    }
 	 }
