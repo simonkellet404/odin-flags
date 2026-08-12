@@ -33,6 +33,7 @@ FORCE_HELP_ON_EMPTY_ARGS := false
 FLAG_START_CHAR := "-"
 FLAG_SEP_CHAR := "="
 
+@(private)
 Flag_Value_Ptr :: union {
 	^bool,
 	^int,
@@ -41,6 +42,7 @@ Flag_Value_Ptr :: union {
 	^f64,
 }
 
+@(private)
 Flag :: struct {
 	name:   string,
 	value:  Flag_Value_Ptr,
@@ -50,9 +52,11 @@ Flag :: struct {
 }
 
 // Global dynamic array of Flags
+@(private)
 all_flags: [dynamic]Flag
 
 // runtime allocator for the flags
+@(private)
 flag_allocator: runtime.Allocator
 
 // sck: Used to create a customer allocator
@@ -69,16 +73,19 @@ destroy :: proc() {
 	all_flags = {}
 }
 
+@(private)
 print_flags :: proc() {
 	for f in all_flags {
 		fmt.printfln("%s: %s (required=%v)", f.name, f.usage, f.required)
 	}
 }
 
+@(private)
 print_flag_format :: proc(){
 	fmt.printfln("Want %s<flag>%s<value>\n", FLAG_START_CHAR, FLAG_SEP_CHAR)
 }
 
+@(private)
 print_usage :: proc() {
 	fmt.println("\tUsage: ")
 	fmt.println("\n\tFlag format for this program:")
@@ -103,26 +110,46 @@ print_usage :: proc() {
 }
 
 BoolVar :: proc(ptr: ^bool, name: string, default: bool, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of BoolVar: got nil for 'ptr' value!")
+		os.exit(1)
+	}
 	ptr^ = default
 	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
 IntVar :: proc(ptr: ^int, name: string, default: int, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of IntVar: got nil for 'ptr' value!")
+		os.exit(1)
+	}
 	ptr^ = default
 	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
 StringVar :: proc(ptr: ^string, name: string, default: string, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of StringVar: got nil for 'ptr' value!")
+		os.exit(1)
+	}
 	ptr^ = default
 	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
 Float32Var :: proc(ptr: ^f32, name: string, default: f32, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of Float32Var: got nil for 'ptr' value!")
+		os.exit(1)
+	}
 	ptr^ = default
 	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
 
 Float64Var :: proc(ptr: ^f64, name: string, default: f64, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of Float64Var: got nil for 'ptr' value!")
+		os.exit(1)
+	}
 	ptr^ = default
 	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
 }
@@ -130,13 +157,13 @@ Float64Var :: proc(ptr: ^f64, name: string, default: f64, usage: string, require
 parse_flags :: proc() {
 	// sck: We cannot have the start and seperator formats being the same
 	if FLAG_START_CHAR == FLAG_SEP_CHAR {
-		fmt.println("[ERROR]: FLAG_START_CHAR and FLAG_SEP_CHAR cannot be the same!")
+		fmt.fprintfln(os.stderr, "[ERROR]: FLAG_START_CHAR and FLAG_SEP_CHAR cannot be the same!")
 		fmt.printfln("\t FLAG_START_CHAR= \"%s\"\t FLAG_SEP_CHAR= \"%s\"", FLAG_START_CHAR, FLAG_SEP_CHAR)
 		os.exit(1)
 	}
 	if len(os.args) < 2 && FORCE_HELP_ON_EMPTY_ARGS {print_usage()}
 
-	// sck: skip the first arg (1:)
+	// skip the first arg (1:)
 	for &a in os.args[1:] {
 		if a == "-h" || a == "-help" || a == "--help" {print_usage(); os.exit(0)}
 		// sck: if the user has a custom flag format, copy that to the help flag too.
@@ -218,7 +245,8 @@ parse_flags :: proc() {
 
 	for f in all_flags {
 	   if f.required && !f.parsed {
-	   	fmt.fprintfln(os.stderr, "[ERROR] Missing required flag: %s%s", FLAG_START_CHAR, f.name)
+	   	// sck: INFO or ERROR?
+	   	fmt.fprintfln(os.stderr, "[INFO] Missing required flag: %s%s", FLAG_START_CHAR, f.name)
 	   	if !FORCE_HELP_ON_EMPTY_ARGS {fmt.fprintfln(os.stderr, "use -help or -h to view all flags")}
 	      os.exit(1)
 	    }
