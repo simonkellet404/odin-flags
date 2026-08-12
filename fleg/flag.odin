@@ -37,6 +37,8 @@ FLAG_SEP_CHAR := "="
 Flag_Value_Ptr :: union {
 	^bool,
 	^int,
+	^i32,
+	^i64,
 	^string,
 	^f32,
 	^f64,
@@ -99,6 +101,10 @@ print_usage :: proc() {
 			fmt.printfln("\t%s%s:\n\t\t%s (default: %v)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^int:
 			fmt.printfln("\t%s%s:\n\t\t%s (default: %d)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
+		case ^i32:
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %d)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
+		case ^i64:
+			fmt.printfln("\t%s%s:\n\t\t%s (default: %d)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^string:
 			fmt.printfln("\t%s%s:\n\t\t%s (default: %s)%s\n", FLAG_START_CHAR, f.name, f.usage, v^, req_msg)
 		case ^f32:
@@ -121,6 +127,24 @@ BoolVar :: proc(ptr: ^bool, name: string, default: bool, usage: string, required
 IntVar :: proc(ptr: ^int, name: string, default: int, usage: string, required := false) {
 	if ptr == nil {
 		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of IntVar: got nil for 'ptr' value!")
+		os.exit(1)
+	}
+	ptr^ = default
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
+}
+
+Int32Var :: proc(ptr: ^i32, name: string, default: i32, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of Int32Var: got nil for 'ptr' value!")
+		os.exit(1)
+	}
+	ptr^ = default
+	append(&all_flags, Flag{name = name, value = ptr, usage = usage, required = required})
+}
+
+Int64Var :: proc(ptr: ^i64, name: string, default: i64, usage: string, required := false) {
+	if ptr == nil {
+		fmt.fprintfln(os.stderr, "[ERROR]: Invalid usage of Int32Var: got nil for 'ptr' value!")
 		os.exit(1)
 	}
 	ptr^ = default
@@ -207,6 +231,26 @@ parse_flags :: proc() {
 				case ^int:
 					if value == "" {break}
 					parsed, ok := strconv.parse_int(value)
+					if !ok {
+						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted int",
+							f.name, value)
+						os.exit(1)
+					}
+					v^ = parsed
+
+				case ^i32:
+					if value == "" {break}
+					parsed, ok := strconv.parse_int(value)
+					if !ok {
+						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted int",
+							f.name, value)
+						os.exit(1)
+					}
+					v^ = cast(i32)parsed
+
+				case ^i64:
+					if value == "" {break}
+					parsed, ok := strconv.parse_i64(value)
 					if !ok {
 						fmt.fprintfln(os.stderr, "[ERROR] Failed to parse flag %s: got %T, wanted int",
 							f.name, value)
